@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 void main() {
@@ -31,7 +33,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'タイマー'),
     );
   }
 }
@@ -55,21 +57,58 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  int ms = 0;
+  int second = 0;
+  int minute = 0;
+  Timer? _timer;
+  bool isrunning = false;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  void _toggletimer(){
+    if(isrunning){
+      _timer?.cancel();
+    }
+    else{
+      _timer = Timer.periodic(
+        const Duration(milliseconds: 1),
+        (timer){
+          setState((){
+            if(ms >= 999){
+              ms = 0;
+              if(second >= 59){
+                second = 0;
+                minute++;
+              }
+              else{
+                second++;
+              }
+            }
+            else{
+              ms++;
+            }
+          });
+        }
+      );
+    }
+    isrunning = !isrunning;
+  }
+  void _resettimer(){
+    setState((){
+      minute = 0;
+      second = 0;
+      ms = 0;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    String printminute = minute.toString().padLeft(2, '0');
+    String printsecond = second.toString().padLeft(2, '0');
+    String printms = (ms ~/ 10).toString().padLeft(2, '0');
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -87,39 +126,36 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
+          children: [
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+              '$printminute:$printsecond.$printms',
+              style: const TextStyle(fontSize: 80),
             ),
+            ElevatedButton(
+              onPressed: _toggletimer,
+              child: Text(
+                !isrunning ? 'start' : 'stop',
+                style: TextStyle(
+                  color: isrunning ? Colors.red : Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+              ), 
+            ),
+            ElevatedButton(
+              onPressed: _resettimer,
+              child: const Text(
+                'reset',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                )
+              ),
+            )
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+        )
+      )// This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
